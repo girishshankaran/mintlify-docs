@@ -1,0 +1,206 @@
+# Staff API Flow
+
+This API flow documents how restaurant staff retrieve active orders, prioritize them, begin preparation, inspect dish ingredients, and move an order to pickup readiness.
+
+## 1. Order Display
+
+### Request
+
+The client sends an authenticated HTTP request to retrieve recently created orders that are currently in the `Received` state.
+
+Method: GET
+
+Endpoint: `<BASE_URL>/orders`
+
+Query parameters:
+- `filter=status.eq~Received|created_at.gte~2025-01-01`
+- `fields=table_number|status|priority|dish_ids`
+
+Headers:
+- `Accept: application/json`
+- `Authorization: Bearer <ACCESS_TOKEN>`
+
+### Response
+
+If the request is successful, the server responds with a `200` status code and returns the filtered list of orders. Staff can use `table_number`, `status`, `priority`, and `dish_ids` to decide what to work on next.
+
+Example response:
+- `table_number`: `8`
+- `status`: `Received`
+- `priority`: `3`
+- `dish_ids`: `66294b2a4475a41f3e709bd1`
+- `total_results`: `1`
+
+## 2. Prioritization
+
+### Request
+
+The client sends an authenticated HTTP request to update an order's priority so staff can move urgent work to the front of the queue.
+
+Method: PUT
+
+Endpoint: `<BASE_URL>/orders/674d0bf5c28b69001f8e03a1`
+
+Headers:
+- `Accept: application/json`
+- `Content-Type: application/json`
+- `Authorization: Bearer <ACCESS_TOKEN>`
+
+Request body:
+- `dish_ids`: `66294b2a4475a41f3e709bd1`
+- `priority`: `1`
+- `status`: `Received`
+
+### Response
+
+If the request is successful, the server responds with a `200` status code and returns the updated order. The lowered priority value indicates higher urgency.
+
+Example response:
+- `id`: `674d0bf5c28b69001f8e03a1`
+- `created_at`: `2024-04-22T10:00:00Z`
+- `updated_at`: `2024-04-22T10:05:00Z`
+- `name`: `John`
+- `table_number`: `8`
+- `dish_ids`: `66294b2a4475a41f3e709bd1`
+- `special_requests`: `No peanuts`
+- `priority`: `1`
+- `scheduled_at`: `null`
+- `status`: `Received`
+- `total_results`: `1`
+
+## 3. Initiating Preparation
+
+### Request
+
+The client sends an authenticated HTTP request to change the order status from `Received` to `In Progress` to indicate that kitchen preparation has started.
+
+Method: PUT
+
+Endpoint: `<BASE_URL>/orders/674d0bf5c28b69001f8e03a1`
+
+Headers:
+- `Accept: application/json`
+- `Content-Type: application/json`
+- `Authorization: Bearer <ACCESS_TOKEN>`
+
+Request body:
+- `dish_ids`: `66294b2a4475a41f3e709bd1`
+- `priority`: `1`
+- `status`: `In Progress`
+
+### Response
+
+If the request is successful, the server responds with a `200` status code and returns the updated order. The `status` field confirms that preparation has started.
+
+Example response:
+- `id`: `674d0bf5c28b69001f8e03a1`
+- `created_at`: `2024-04-22T10:00:00Z`
+- `updated_at`: `2024-04-22T10:10:00Z`
+- `name`: `John`
+- `table_number`: `8`
+- `dish_ids`: `66294b2a4475a41f3e709bd1`
+- `special_requests`: `No peanuts`
+- `priority`: `1`
+- `scheduled_at`: `null`
+- `status`: `In Progress`
+- `total_results`: `1`
+
+## 4. Order Preparation by Stations
+
+### Request
+
+The client sends an authenticated HTTP request to retrieve the dishes for an order and filter them by station so the appropriate kitchen station can prepare its assigned dishes.
+
+Method: GET
+
+Endpoint: `<BASE_URL>/orders/674d0bf5c28b69001f8e03a1/dishes`
+
+Query parameters:
+- `filter=station.eq~hot`
+- `fields=name|image_name`
+
+Headers:
+- `Accept: application/json`
+- `Authorization: Bearer <ACCESS_TOKEN>`
+
+### Response
+
+If the request is successful, the server responds with a `200` status code and returns the dishes assigned to the selected station. Staff can use the `name` and `image_name` fields to identify the dish being prepared.
+
+Example response:
+- `name`: `Risotto alla Milanese`
+- `image_name`: `burger`
+- `total_results`: `1`
+
+## 5. Display Dish Ingredients
+
+### Request
+
+The client sends an authenticated HTTP request to retrieve the ingredients for a dish so the station can see what is needed for preparation.
+
+Method: GET
+
+Endpoint: `<BASE_URL>/dishes/66294b2a4475a41f3e709bd1/ingredients`
+
+Query parameters:
+- `fields=name`
+
+Headers:
+- `Accept: application/json`
+- `Authorization: Bearer <ACCESS_TOKEN>`
+
+### Response
+
+If the request is successful, the server responds with a `200` status code and returns the ingredient names for the dish.
+
+Example response:
+- `name`: `Carrot`
+- `name`: `Butter`
+- `total_results`: `2`
+
+## 6. Ready for Assembly
+
+### Request
+
+The client sends an authenticated HTTP request to update the order status when cooking is finished and the order is ready for final handling.
+
+Method: PUT
+
+Endpoint: `<BASE_URL>/orders/674d0bf5c28b69001f8e03a1`
+
+Headers:
+- `Accept: application/json`
+- `Content-Type: application/json`
+- `Authorization: Bearer <ACCESS_TOKEN>`
+
+Request body:
+- `dish_ids`: `66294b2a4475a41f3e709bd1`
+- `priority`: `1`
+- `status`: `Ready for Pickup`
+
+### Response
+
+If the request is successful, the server responds with a `200` status code and returns the updated order. The `status` field confirms that the order is ready for the next handoff.
+
+Example response:
+- `id`: `674d0bf5c28b69001f8e03a1`
+- `created_at`: `2024-04-22T10:00:00Z`
+- `updated_at`: `2024-04-22T10:20:00Z`
+- `name`: `John`
+- `table_number`: `8`
+- `dish_ids`: `66294b2a4475a41f3e709bd1`
+- `special_requests`: `No peanuts`
+- `priority`: `1`
+- `scheduled_at`: `null`
+- `status`: `Ready for Pickup`
+- `total_results`: `1`
+
+## 7. Order Assembly
+
+### Request
+
+No additional API request is needed for this step in the documented flow. In the user interface, staff assemble, verify, and hand off the completed order after the system shows that it is ready for pickup.
+
+### Response
+
+No additional API response is documented for this step beyond the order update that set the status to `Ready for Pickup`.
