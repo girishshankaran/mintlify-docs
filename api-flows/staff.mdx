@@ -1,244 +1,241 @@
 # Staff API Flow
 
-  This API flow documents how restaurant staff retrieve active orders, prioritize them, begin preparation, inspect dish ingredients, and move an order to
-  pickup readiness.
+This API flow documents how restaurant staff retrieve active orders, prioritize them, begin preparation, inspect dish ingredients, and move an order to pickup readiness.
 
-  ## 1. Order Display
+## 1. Order Display
 
-  ### Request
+### Request
 
-  The client sends an authenticated HTTP request to retrieve recently created orders that are currently in the `Received` state.
+The client sends an authenticated HTTP request to retrieve recently created orders that are currently in the `Received` state.
 
-  ```bash
-  curl -X GET "<BASE_URL>/orders?filter=status.eq~Received|created_at.gte~2025-01-01&fields=table_number|status|priority|dish_ids" \
-    -H "Accept: application/json" \
-    -H "Authorization: Bearer <ACCESS_TOKEN>"
+```bash
+curl -X GET "<BASE_URL>/orders?filter=status.eq~Received|created_at.gte~2025-01-01&fields=table_number|status|priority|dish_ids" \
+  -H "Accept: application/json" \
+  -H "Authorization: Bearer <ACCESS_TOKEN>"
+```
 
-  ### Response
+### Response
 
-  If the request was successful, the server responds with a 200 status code and a response body containing the filtered list of orders. Staff can use
-  table_number, status, priority, and dish_ids to decide what to work on next.
+If the request was successful, the server responds with a 200 status code and a response body containing the filtered list of orders. Staff can use `table_number`, `status`, `priority`, and `dish_ids` to decide what to work on next.
 
-  # 200 OK
-  # Content-Type: application/json
+```json
+{
+  "results": [
+    {
+      "table_number": 8,
+      "status": "Received",
+      "priority": 3,
+      "dish_ids": [
+        "66294b2a4475a41f3e709bd1"
+      ]
+    }
+  ],
+  "total_results": 1
+}
+```
 
-  {
-    "results": [
-      {
-        "table_number": 8,
-        "status": "Received",
-        "priority": 3,
-        "dish_ids": [
-          "66294b2a4475a41f3e709bd1"
-        ]
-      }
+## 2. Prioritization
+
+### Request
+
+The client sends an authenticated HTTP request to update an order's priority so staff can move urgent work to the front of the queue.
+
+```bash
+curl -X PUT "<BASE_URL>/orders/674d0bf5c28b69001f8e03a1" \
+  -H "Accept: application/json" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <ACCESS_TOKEN>" \
+  -d '{
+    "dish_ids": [
+      "66294b2a4475a41f3e709bd1"
     ],
-    "total_results": 1
-  }
+    "priority": 1,
+    "status": "Received"
+  }'
+```
 
-  ## 2. Prioritization
+### Response
 
-  ### Request
+If the request was successful, the server responds with a 200 status code and a response body containing the updated order. The lowered priority value indicates higher urgency.
 
-  The client sends an authenticated HTTP request to update an order's priority so staff can move urgent work to the front of the queue.
-
-  curl -X PUT "<BASE_URL>/orders/674d0bf5c28b69001f8e03a1" \
-    -H "Accept: application/json" \
-    -H "Content-Type: application/json" \
-    -H "Authorization: Bearer <ACCESS_TOKEN>" \
-    -d '{
+```json
+{
+  "results": [
+    {
+      "id": "674d0bf5c28b69001f8e03a1",
+      "created_at": "2024-04-22T10:00:00Z",
+      "updated_at": "2024-04-22T10:05:00Z",
+      "name": "John",
+      "table_number": 8,
       "dish_ids": [
         "66294b2a4475a41f3e709bd1"
       ],
+      "special_requests": "No peanuts",
       "priority": 1,
+      "scheduled_at": null,
       "status": "Received"
-    }'
+    }
+  ],
+  "total_results": 1
+}
+```
 
-  ### Response
+## 3. Initiating Preparation
 
-  If the request was successful, the server responds with a 200 status code and a response body containing the updated order. The lowered priority value
-  indicates higher urgency.
+### Request
 
-  # 200 OK
-  # Content-Type: application/json
+The client sends an authenticated HTTP request to change the order status from `Received` to `In Progress` to indicate that kitchen preparation has started.
 
-  {
-    "results": [
-      {
-        "id": "674d0bf5c28b69001f8e03a1",
-        "created_at": "2024-04-22T10:00:00Z",
-        "updated_at": "2024-04-22T10:05:00Z",
-        "name": "John",
-        "table_number": 8,
-        "dish_ids": [
-          "66294b2a4475a41f3e709bd1"
-        ],
-        "special_requests": "No peanuts",
-        "priority": 1,
-        "scheduled_at": null,
-        "status": "Received"
-      }
+```bash
+curl -X PUT "<BASE_URL>/orders/674d0bf5c28b69001f8e03a1" \
+  -H "Accept: application/json" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <ACCESS_TOKEN>" \
+  -d '{
+    "dish_ids": [
+      "66294b2a4475a41f3e709bd1"
     ],
-    "total_results": 1
-  }
+    "priority": 1,
+    "status": "In Progress"
+  }'
+```
 
-  ## 3. Initiating Preparation
+### Response
 
-  ### Request
+If the request was successful, the server responds with a 200 status code and a response body containing the updated order. The `status` field confirms that preparation has started.
 
-  The client sends an authenticated HTTP request to change the order status from Received to In Progress to indicate that kitchen preparation has started.
-
-  curl -X PUT "<BASE_URL>/orders/674d0bf5c28b69001f8e03a1" \
-    -H "Accept: application/json" \
-    -H "Content-Type: application/json" \
-    -H "Authorization: Bearer <ACCESS_TOKEN>" \
-    -d '{
+```json
+{
+  "results": [
+    {
+      "id": "674d0bf5c28b69001f8e03a1",
+      "created_at": "2024-04-22T10:00:00Z",
+      "updated_at": "2024-04-22T10:10:00Z",
+      "name": "John",
+      "table_number": 8,
       "dish_ids": [
         "66294b2a4475a41f3e709bd1"
       ],
+      "special_requests": "No peanuts",
       "priority": 1,
+      "scheduled_at": null,
       "status": "In Progress"
-    }'
+    }
+  ],
+  "total_results": 1
+}
+```
 
-  ### Response
+## 4. Order Preparation by Stations
 
-  If the request was successful, the server responds with a 200 status code and a response body containing the updated order. The status field confirms
-  that preparation has started.
+### Request
 
-  # 200 OK
-  # Content-Type: application/json
+The client sends an authenticated HTTP request to retrieve the dishes for an order and filter them by station so the appropriate kitchen station can prepare its assigned dishes.
 
-  {
-    "results": [
-      {
-        "id": "674d0bf5c28b69001f8e03a1",
-        "created_at": "2024-04-22T10:00:00Z",
-        "updated_at": "2024-04-22T10:10:00Z",
-        "name": "John",
-        "table_number": 8,
-        "dish_ids": [
-          "66294b2a4475a41f3e709bd1"
-        ],
-        "special_requests": "No peanuts",
-        "priority": 1,
-        "scheduled_at": null,
-        "status": "In Progress"
-      }
+```bash
+curl -X GET "<BASE_URL>/orders/674d0bf5c28b69001f8e03a1/dishes?filter=station.eq~hot&fields=name|image_name" \
+  -H "Accept: application/json" \
+  -H "Authorization: Bearer <ACCESS_TOKEN>"
+```
+
+### Response
+
+If the request was successful, the server responds with a 200 status code and a response body containing the dishes assigned to the selected station. Staff can use the `name` and `image_name` fields to identify the dish being prepared.
+
+```json
+{
+  "results": [
+    {
+      "name": "Risotto alla Milanese",
+      "image_name": "burger"
+    }
+  ],
+  "total_results": 1
+}
+```
+
+## 5. Display Dish Ingredients
+
+### Request
+
+The client sends an authenticated HTTP request to retrieve the ingredients for a dish so the station can see what is needed for preparation.
+
+```bash
+curl -X GET "<BASE_URL>/dishes/66294b2a4475a41f3e709bd1/ingredients?fields=name" \
+  -H "Accept: application/json" \
+  -H "Authorization: Bearer <ACCESS_TOKEN>"
+```
+
+### Response
+
+If the request was successful, the server responds with a 200 status code and a response body containing the ingredient names for the dish.
+
+```json
+{
+  "results": [
+    {
+      "name": "Carrot"
+    },
+    {
+      "name": "Butter"
+    }
+  ],
+  "total_results": 2
+}
+```
+
+## 6. Ready for Assembly
+
+### Request
+
+The client sends an authenticated HTTP request to update the order status when cooking is finished and the order is ready for final handling.
+
+```bash
+curl -X PUT "<BASE_URL>/orders/674d0bf5c28b69001f8e03a1" \
+  -H "Accept: application/json" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <ACCESS_TOKEN>" \
+  -d '{
+    "dish_ids": [
+      "66294b2a4475a41f3e709bd1"
     ],
-    "total_results": 1
-  }
+    "priority": 1,
+    "status": "Ready for Pickup"
+  }'
+```
 
-  ## 4. Order Preparation by Stations
+### Response
 
-  ### Request
+If the request was successful, the server responds with a 200 status code and a response body containing the updated order. The `status` field confirms that the order is ready for the next handoff.
 
-  The client sends an authenticated HTTP request to retrieve the dishes for an order and filter them by station so the appropriate kitchen station can
-  prepare its assigned dishes.
-
-  curl -X GET "<BASE_URL>/orders/674d0bf5c28b69001f8e03a1/dishes?filter=station.eq~hot&fields=name|image_name" \
-    -H "Accept: application/json" \
-    -H "Authorization: Bearer <ACCESS_TOKEN>"
-
-  ### Response
-
-  If the request was successful, the server responds with a 200 status code and a response body containing the dishes assigned to the selected station.
-  Staff can use the name and image_name fields to identify the dish being prepared.
-
-  # 200 OK
-  # Content-Type: application/json
-
-  {
-    "results": [
-      {
-        "name": "Risotto alla Milanese",
-        "image_name": "burger"
-      }
-    ],
-    "total_results": 1
-  }
-
-  ## 5. Display Dish Ingredients
-
-  ### Request
-
-  The client sends an authenticated HTTP request to retrieve the ingredients for a dish so the station can see what is needed for preparation.
-
-  curl -X GET "<BASE_URL>/dishes/66294b2a4475a41f3e709bd1/ingredients?fields=name" \
-    -H "Accept: application/json" \
-    -H "Authorization: Bearer <ACCESS_TOKEN>"
-
-  ### Response
-
-  If the request was successful, the server responds with a 200 status code and a response body containing the ingredient names for the dish.
-
-  # 200 OK
-  # Content-Type: application/json
-
-  {
-    "results": [
-      {
-        "name": "Carrot"
-      },
-      {
-        "name": "Butter"
-      }
-    ],
-    "total_results": 2
-  }
-
-  ## 6. Ready for Assembly
-
-  ### Request
-
-  The client sends an authenticated HTTP request to update the order status when cooking is finished and the order is ready for final handling.
-
-  curl -X PUT "<BASE_URL>/orders/674d0bf5c28b69001f8e03a1" \
-    -H "Accept: application/json" \
-    -H "Content-Type: application/json" \
-    -H "Authorization: Bearer <ACCESS_TOKEN>" \
-    -d '{
+```json
+{
+  "results": [
+    {
+      "id": "674d0bf5c28b69001f8e03a1",
+      "created_at": "2024-04-22T10:00:00Z",
+      "updated_at": "2024-04-22T10:20:00Z",
+      "name": "John",
+      "table_number": 8,
       "dish_ids": [
         "66294b2a4475a41f3e709bd1"
       ],
+      "special_requests": "No peanuts",
       "priority": 1,
+      "scheduled_at": null,
       "status": "Ready for Pickup"
-    }'
+    }
+  ],
+  "total_results": 1
+}
+```
 
-  ### Response
+## 7. Order Assembly
 
-  If the request was successful, the server responds with a 200 status code and a response body containing the updated order. The status field confirms
-  that the order is ready for the next handoff.
+### Request
 
-  # 200 OK
-  # Content-Type: application/json
+No additional curl request is needed for this step in the documented flow. In the user interface, staff assemble, verify, and hand off the completed order after the system shows that it is ready for pickup.
 
-  {
-    "results": [
-      {
-        "id": "674d0bf5c28b69001f8e03a1",
-        "created_at": "2024-04-22T10:00:00Z",
-        "updated_at": "2024-04-22T10:20:00Z",
-        "name": "John",
-        "table_number": 8,
-        "dish_ids": [
-          "66294b2a4475a41f3e709bd1"
-        ],
-        "special_requests": "No peanuts",
-        "priority": 1,
-        "scheduled_at": null,
-        "status": "Ready for Pickup"
-      }
-    ],
-    "total_results": 1
-  }
+### Response
 
-  ## 7. Order Assembly
-
-  ### Request
-
-  No additional curl request is needed for this step in the documented flow. In the user interface, staff assemble, verify, and hand off the completed
-  order after the system shows that it is ready for pickup.
-
-  ### Response
-
-  No additional API response is documented for this step beyond the order update that set the status to Ready for Pickup.
+No additional API response is documented for this step beyond the order update that set the status to `Ready for Pickup`.
