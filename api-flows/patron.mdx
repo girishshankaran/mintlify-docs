@@ -8,34 +8,43 @@ This API flow documents how a patron browses dishes, checks whether ingredients 
 
 The client sends an HTTP request to retrieve dishes in a specific category so the patron can start browsing the menu.
 
-Method: GET
-
-Endpoint: `<BASE_URL>/dishes`
-
-Query parameters:
-- `filter=category.eq~Appetizer`
-
-Headers:
-- `Accept: application/json`
+```bash
+curl -X GET "<BASE_URL>/dishes?filter=category.eq~Appetizer" \
+  -H "Accept: application/json"
+```
 
 ### Response
 
-If the request is successful, the server responds with a `200` status code and returns a list of dishes in the selected category. The client can use the `id`, `name`, and `ingredients` fields to decide which dish to inspect next.
+If the request was successful, the server responds with a 200 status code and a response body containing a list of dishes in the selected category. The client can use the `id`, `name`, and `ingredients` fields to decide which dish to inspect next.
 
-Example response:
-- `id`: `66294b2a4475a41f3e709bd1`
-- `created_at`: `2024-04-22T10:00:00Z`
-- `name`: `Risotto alla Milanese`
-- `description`: `A description of the resource.`
-- `category`: `Appetizer`
-- `image_name`: `burger`
-- `ingredients`:
-  - `ingredient_id`: `66294b2a4475a41f3e709bc5`, `is_essential`: `true`
-  - `ingredient_id`: `66294b2a4475a41f3e709bc6`, `is_essential`: `true`
-- `preparation_time`: `999`
-- `price`: `999`
-- `station`: `hot`
-- `total_results`: `1`
+```json
+{
+  "results": [
+    {
+      "id": "66294b2a4475a41f3e709bd1",
+      "created_at": "2024-04-22T10:00:00Z",
+      "name": "Risotto alla Milanese",
+      "description": "A description of the resource.",
+      "category": "Appetizer",
+      "image_name": "burger",
+      "ingredients": [
+        {
+          "ingredient_id": "66294b2a4475a41f3e709bc5",
+          "is_essential": true
+        },
+        {
+          "ingredient_id": "66294b2a4475a41f3e709bc6",
+          "is_essential": true
+        }
+      ],
+      "preparation_time": 999,
+      "price": 999,
+      "station": "hot"
+    }
+  ],
+  "total_results": 1
+}
+```
 
 ## 2. Check Ingredient Quantities
 
@@ -43,24 +52,25 @@ Example response:
 
 The client sends an HTTP request to retrieve the details of a specific ingredient so it can confirm the ingredient has a positive `in_stock_qty`.
 
-Method: GET
-
-Endpoint: `<BASE_URL>/ingredients/66294b2a4475a41f3e709bc5`
-
-Headers:
-- `Accept: application/json`
+```bash
+curl -X GET "<BASE_URL>/ingredients/66294b2a4475a41f3e709bc5" \
+  -H "Accept: application/json"
+```
 
 ### Response
 
-If the request is successful, the server responds with a `200` status code and returns the ingredient details. The `in_stock_qty` field tells the client whether the ingredient is available in inventory.
+If the request was successful, the server responds with a 200 status code and a response body containing the ingredient details.
 
-Example response:
-- `id`: `674d0bf5c28b69001f8e03a1`
-- `created_at`: `2024-04-22T10:00:00Z`
-- `updated_at`: `2024-04-22T10:00:00Z`
-- `name`: `Carrot`
-- `in_stock_qty`: `3`
-- `price`: `999`
+```json
+{
+  "id": "674d0bf5c28b69001f8e03a1",
+  "created_at": "2024-04-22T10:00:00Z",
+  "updated_at": "2024-04-22T10:00:00Z",
+  "name": "Carrot",
+  "in_stock_qty": 3,
+  "price": 999
+}
+```
 
 ## 3. View Dish Details
 
@@ -68,85 +78,98 @@ Example response:
 
 The client sends an HTTP request to retrieve the details of a specific dish so the patron can review the full dish information before ordering.
 
-Method: GET
-
-Endpoint: `<BASE_URL>/dishes/66294b2a4475a41f3e709bd1`
-
-Headers:
-- `Accept: application/json`
+```bash
+curl -X GET "<BASE_URL>/dishes/66294b2a4475a41f3e709bd1" \
+  -H "Accept: application/json"
+```
 
 ### Response
 
-If the request is successful, the server responds with a `200` status code and returns the dish details, including the dish name, description, price, station, and ingredient list.
+If the request was successful, the server responds with a 200 status code and a response body containing the dish details.
 
-Example response:
-- `id`: `66294b2a4475a41f3e709bd1`
-- `created_at`: `2024-04-22T10:00:00Z`
-- `name`: `Risotto alla Milanese`
-- `description`: `A description of the resource.`
-- `category`: `Appetizer`
-- `image_name`: `burger`
-- `ingredients`:
-  - `ingredient_id`: `66294b2a4475a41f3e709bc5`, `is_essential`: `true`
-  - `ingredient_id`: `66294b2a4475a41f3e709bc6`, `is_essential`: `true`
-- `preparation_time`: `45`
-- `price`: `999`
-- `station`: `hot`
+```json
+{
+  "id": "66294b2a4475a41f3e709bd1",
+  "created_at": "2024-04-22T10:00:00Z",
+  "name": "Risotto alla Milanese",
+  "description": "A description of the resource.",
+  "category": "Appetizer",
+  "image_name": "burger",
+  "ingredients": [
+    {
+      "ingredient_id": "66294b2a4475a41f3e709bc5",
+      "is_essential": true
+    },
+    {
+      "ingredient_id": "66294b2a4475a41f3e709bc6",
+      "is_essential": true
+    }
+  ],
+  "preparation_time": 45,
+  "price": 999,
+  "station": "hot"
+}
+```
 
 ## 4. Add Dishes and View the Cart
 
 ### Request
 
-No API request is needed for this step. In the user interface, the patron adds one or more dishes to the cart, updates quantities if needed, and reviews the current cart contents before checkout.
+No curl request is needed for this step. In the user interface, the patron adds one or more dishes to the cart, updates quantities if needed, and reviews the current cart contents before checkout.
 
 ### Response
 
-No API response is documented for this step. The cart state is managed in the user interface until the patron confirms the order.
+No API response is documented for this step.
 
 ## 5. Place an Order
 
 ### Request
 
-The client sends an authenticated HTTP request to create an order for the selected dishes.
+The client sends an authenticated HTTP request to create an order.
 
-Method: POST
-
-Endpoint: `<BASE_URL>/orders`
-
-Headers:
-- `Accept: application/json`
-- `Content-Type: application/json`
-- `Authorization: Bearer <ACCESS_TOKEN>`
-
-Request body:
-- `name`: `Benjamin`
-- `table_number`: `18`
-- `dish_ids`: `66294b2a4475a41f3e709bd1`
-- `special_requests`: `No peanuts`
-- `scheduled_at`: `null`
+```bash
+curl -X POST "<BASE_URL>/orders" \
+  -H "Accept: application/json" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <ACCESS_TOKEN>" \
+  -d '{
+    "name": "Benjamin",
+    "table_number": 18,
+    "dish_ids": [
+      "66294b2a4475a41f3e709bd1"
+    ],
+    "special_requests": "No peanuts",
+    "scheduled_at": null
+  }'
+```
 
 ### Response
 
-If the request is successful, the server responds with a `201` status code and returns the newly created order. The client can use the returned `id` to track or update the order later.
+If the request was successful, the server responds with a 201 status code and a response body containing the newly created order.
 
-Example response:
-- `id`: `674d0bf5c28b69001f8e03a1`
-- `created_at`: `2024-04-22T10:00:00Z`
-- `updated_at`: `2024-04-22T10:00:00Z`
-- `name`: `John`
-- `table_number`: `8`
-- `dish_ids`: `66294b2a4475a41f3e709bd1`
-- `special_requests`: `No peanuts`
-- `priority`: `3`
-- `scheduled_at`: `null`
-- `status`: `Received`
+```json
+{
+  "id": "674d0bf5c28b69001f8e03a1",
+  "created_at": "2024-04-22T10:00:00Z",
+  "updated_at": "2024-04-22T10:00:00Z",
+  "name": "John",
+  "table_number": 8,
+  "dish_ids": [
+    "66294b2a4475a41f3e709bd1"
+  ],
+  "special_requests": "No peanuts",
+  "priority": 3,
+  "scheduled_at": null,
+  "status": "Received"
+}
+```
 
 ## 6. Order Confirmation
 
 ### Request
 
-No API request is needed for this step. In the user interface, the application confirms that the order was placed successfully and displays the order identifier and current status to the patron.
+No curl request is needed.
 
 ### Response
 
-No additional API response is documented for this step beyond the `201 Created` response returned when the order is submitted.
+No additional API response beyond the `201 Created` response.
